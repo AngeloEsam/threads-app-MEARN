@@ -1,8 +1,9 @@
 import bcrypt from "bcryptjs";
 import User from "../models/userModel.js";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
-import {v2 as cloudinary} from 'cloudinary'
+import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
+import Post from "../../backend/models/postModel.js";
 
 //regiser user
 const signupUser = async (req, res) => {
@@ -30,7 +31,7 @@ const signupUser = async (req, res) => {
         username: newUser.username,
         email: newUser.email,
         bio: newUser.bio,
-				profilePic: newUser.profilePic,
+        profilePic: newUser.profilePic,
       });
     } else {
       res.status(400).json({ error: "Invalid user data" });
@@ -119,7 +120,7 @@ const followAndUnfollowUser = async (req, res) => {
 //update user
 const updateUser = async (req, res) => {
   const { name, username, email, password, bio } = req.body;
-  let {profilePic}=req.body;
+  let { profilePic } = req.body;
   const userId = req.user._id;
   try {
     let user = await User.findById(userId);
@@ -134,10 +135,12 @@ const updateUser = async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, salt);
       user.password = hashedPassword;
     }
-    if(profilePic){
+    if (profilePic) {
       if (user.profilePic) {
-				await cloudinary.uploader.destroy(user.profilePic.split("/").pop().split(".")[0]);
-			}
+        await cloudinary.uploader.destroy(
+          user.profilePic.split("/").pop().split(".")[0]
+        );
+      }
       const result = await cloudinary.uploader.upload(profilePic);
       profilePic = result.secure_url;
     }
@@ -147,7 +150,17 @@ const updateUser = async (req, res) => {
     user.bio = bio || user.bio;
     user.profilePic = profilePic || user.profilePic;
     user = await user.save();
-    user.password=null
+    await Post.updateMany(
+      { "replies.userId": userId },
+      {
+        $set: {
+          "replies.$[reply].username": user.username,
+          "replies.$[reply].userProfilePic": user.profilePic,
+        },
+      },
+      { arrayFilters: [{ "reply.userId": userId }] }
+    );
+    user.password = null;
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: err.message });
@@ -156,28 +169,32 @@ const updateUser = async (req, res) => {
 };
 
 const getUserProfile = async (req, res) => {
-	// We will fetch user profile either with username or userId
-	// query is either username or userId
-	const { query } = req.params;
+  // We will fetch user profile either with username or userId
+  // query is either username or userId
+  const { query } = req.params;
 
-	try {
-		let user;
+  try {
+    let user;
 
-		// query is userId
-		if (mongoose.Types.ObjectId.isValid(query)) {
-			user = await User.findOne({ _id: query }).select("-password").select("-updatedAt");
-		} else {
-			// query is username
-			user = await User.findOne({ username: query }).select("-password").select("-updatedAt");
-		}
+    // query is userId
+    if (mongoose.Types.ObjectId.isValid(query)) {
+      user = await User.findOne({ _id: query })
+        .select("-password")
+        .select("-updatedAt");
+    } else {
+      // query is username
+      user = await User.findOne({ username: query })
+        .select("-password")
+        .select("-updatedAt");
+    }
 
-		if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-		res.status(200).json(user);
-	} catch (err) {
-		res.status(500).json({ error: err.message });
-		console.log("Error in getUserProfile: ", err.message);
-	}
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+    console.log("Error in getUserProfile: ", err.message);
+  }
 };
 export {
   signupUser,
