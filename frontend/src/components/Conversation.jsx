@@ -29,7 +29,7 @@ const Conversation = () => {
             sm:'sm',
             md: "md",
           }}
-          src="https://bit.1y/borken-link"
+          src="https://bit.ly/borken-link"
         >
           <AvatarBadge boxSize="1em" bg={"green.500"} />
         </Avatar>

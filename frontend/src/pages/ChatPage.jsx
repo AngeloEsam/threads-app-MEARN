@@ -10,7 +10,8 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import Conversation from "../components/Conversation";
-import {GiConversation} from 'react-icons/gi'
+// import {GiConversation} from 'react-icons/gi'
+import MessageContainer from "../components/MessageContainer";
 
 const ChatPage = () => {
   return (
@@ -82,7 +83,7 @@ const ChatPage = () => {
           <Conversation />
           <Conversation />
         </Flex>
-        <Flex
+        {/* <Flex
           flex={70}
           alignItems={"center"}
           justifyContent={"center"}
@@ -92,8 +93,8 @@ const ChatPage = () => {
         >
             <GiConversation size={100}/>
             <Text fontSize={20}>Select a conversation to start messaging</Text>
-        </Flex>
-        {/* <Flex flex={70}>messageContainer</Flex> */}
+        </Flex> */}
+       <MessageContainer/>
       </Flex>
     </Box>
   );
