@@ -51,7 +51,7 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ username });
     if (!user) return res.status(400).json({ error: "User not found" });
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: "Incorrect password" });
+    if (!isMatch) return res.status(400).json({ error: "Incorrect password" });
     generateTokenAndSetCookie(user._id, res);
     res.status(200).json({
       _id: user._id,
