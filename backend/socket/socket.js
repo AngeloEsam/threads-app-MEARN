@@ -13,9 +13,15 @@ const io = new Server(server, {
     credentials: true,
   },
 });
-
+const userSocketMap = {};
 io.on("connection", (socket) => {
   console.log("a user connected", socket.id);
+  const userId = socket.handshake.query.userId;
+  if (userId !== "undefined") userSocketMap[userId] = socket.id;
+  io.emit('getOnlineUsers',Object.keys(userSocketMap))
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
 });
 
 export { io, server, app };
