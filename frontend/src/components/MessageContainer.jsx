@@ -31,9 +31,9 @@ const MessageContainer = () => {
   const messageEndRef = useRef(null);
   useEffect(() => {
     socket.on("newMessage", (message) => {
-     if(selectedConversation._id==message.conversationId){
-      setMessages((pevMessages) => [...pevMessages, message]);
-     }
+      if (selectedConversation._id == message.conversationId) {
+        setMessages((pevMessages) => [...pevMessages, message]);
+      }
       setConversations((prev) => {
         const updatedConversations = prev.map((conversation) => {
           if (conversation._id === message.conversationId) {
@@ -51,7 +51,7 @@ const MessageContainer = () => {
       });
     });
     return () => socket.off("newMessage");
-  }, [socket]);
+  }, [socket, selectedConversation, setConversations]);
   useEffect(() => {
     const getMessages = async () => {
       setLoadingMessages(true);
@@ -73,10 +73,38 @@ const MessageContainer = () => {
       }
     };
     getMessages();
-  }, [showToast, selectedConversation.userId]);
-  useEffect(()=>{
+  }, [showToast, selectedConversation.userId, selectedConversation.mock]);
+  useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  },[messages])
+  }, [messages]);
+  useEffect(() => {
+    const lastMessageIsFromOtherUser =
+      messages.length &&
+      messages[messages.length - 1].sender !== currentUser._id;
+    if (lastMessageIsFromOtherUser) {
+      socket.emit("markMessagesAsSeen", {
+        userId: selectedConversation.userId,
+        conversationId: selectedConversation._id,
+      });
+    }
+    
+		socket.on("messagesSeen", ({ conversationId }) => {
+			if (selectedConversation._id === conversationId) {
+				setMessages((prev) => {
+					const updatedMessages = prev.map((message) => {
+						if (!message.seen) {
+							return {
+								...message,
+								seen: true,
+							};
+						}
+						return message;
+					});
+					return updatedMessages;
+				});
+			}
+		});
+  }, [currentUser._id, messages, selectedConversation, socket]);
   return (
     <Flex
       flex={70}
@@ -121,8 +149,14 @@ const MessageContainer = () => {
           ))}
         {!loadingMessages &&
           messages.map((message) => (
-            <Flex key={message._id} direction={'column'}
-            ref={messages.length-1===messages.indexOf(message)?messageEndRef:null}
+            <Flex
+              key={message._id}
+              direction={"column"}
+              ref={
+                messages.length - 1 === messages.indexOf(message)
+                  ? messageEndRef
+                  : null
+              }
             >
               <Message
                 message={message}

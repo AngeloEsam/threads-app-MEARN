@@ -89,7 +89,7 @@ export default function LoginCard() {
                 }
               />
             </FormControl>
-            <FormControl isRequired>
+            <FormControl isRequired >
               <FormLabel>Password</FormLabel>
               <InputGroup>
                 <Input
