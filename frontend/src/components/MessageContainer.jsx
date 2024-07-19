@@ -10,11 +10,15 @@ import {
 } from "@chakra-ui/react";
 import Message from "./Message";
 import MessageInput from "./MessageInput";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useShowToast from "../hooks/useShowToast";
-import { useRecoilValue } from "recoil";
-import { selectedConversationAtom } from "../atoms/messagesAtom";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import {
+  conversationsAtom,
+  selectedConversationAtom,
+} from "../atoms/messagesAtom";
 import userAtom from "../atoms/userAtom";
+import { useSocket } from "../context/SocketContext";
 
 const MessageContainer = () => {
   const showToast = useShowToast();
@@ -22,12 +26,38 @@ const MessageContainer = () => {
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [messages, setMessages] = useState([]);
   const currentUser = useRecoilValue(userAtom);
+  const { socket } = useSocket();
+  const setConversations = useSetRecoilState(conversationsAtom);
+  const messageEndRef = useRef(null);
+  useEffect(() => {
+    socket.on("newMessage", (message) => {
+     if(selectedConversation._id==message.conversationId){
+      setMessages((pevMessages) => [...pevMessages, message]);
+     }
+      setConversations((prev) => {
+        const updatedConversations = prev.map((conversation) => {
+          if (conversation._id === message.conversationId) {
+            return {
+              ...conversation,
+              lastMessage: {
+                text: message.text,
+                sender: message.sender,
+              },
+            };
+          }
+          return conversation;
+        });
+        return updatedConversations;
+      });
+    });
+    return () => socket.off("newMessage");
+  }, [socket]);
   useEffect(() => {
     const getMessages = async () => {
-      setLoadingMessages(true)
-      setMessages([])
+      setLoadingMessages(true);
+      setMessages([]);
       try {
-        if(selectedConversation.mock) return;
+        if (selectedConversation.mock) return;
         const res = await fetch(`/api/messages/${selectedConversation.userId}`);
         const data = await res.json();
         if (data.error) {
@@ -44,6 +74,9 @@ const MessageContainer = () => {
     };
     getMessages();
   }, [showToast, selectedConversation.userId]);
+  useEffect(()=>{
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  },[messages])
   return (
     <Flex
       flex={70}
@@ -54,7 +87,8 @@ const MessageContainer = () => {
       <Flex w={"full"} h={12} alignItems={"center"} gap={2} p={2}>
         <Avatar src={selectedConversation.userProfilePic} size={"sm"} />
         <Text fontWeight={700} display={"flex"} alignItems={"center"}>
-          {selectedConversation.username} <Image src="/verified.png" ml={1} w={4} h={4} />
+          {selectedConversation.username}{" "}
+          <Image src="/verified.png" ml={1} w={4} h={4} />
         </Text>
       </Flex>
       <Divider />
@@ -87,14 +121,17 @@ const MessageContainer = () => {
           ))}
         {!loadingMessages &&
           messages.map((message) => (
-            <Message
-              key={message._id}
-              message={message}
-              ownMessage={currentUser._id === message.sender}
-            />
+            <Flex key={message._id} direction={'column'}
+            ref={messages.length-1===messages.indexOf(message)?messageEndRef:null}
+            >
+              <Message
+                message={message}
+                ownMessage={currentUser._id === message.sender}
+              />
+            </Flex>
           ))}
       </Flex>
-      <MessageInput setMessages={setMessages}/>
+      <MessageInput setMessages={setMessages} />
     </Flex>
   );
 };
