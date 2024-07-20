@@ -4,6 +4,7 @@ import useShowToast from "../hooks/useShowToast";
 import Post from "../components/Post";
 import { useRecoilState } from "recoil";
 import postsAtom from "../atoms/PAtom";
+import SuggestedUsers from "../components/SuggestedUsers";
 
 
 const HomePage = () => {
@@ -46,6 +47,12 @@ const HomePage = () => {
 				{posts.map((post) => (
 					<Post key={post._id} post={post} postedBy={post.postedBy} />
 				))}
+			</Box>
+			<Box flex={30} display={{
+				sm: "none",
+                md: "block"
+			}}>
+				<SuggestedUsers/>
 			</Box>
 		</Flex>
 	);

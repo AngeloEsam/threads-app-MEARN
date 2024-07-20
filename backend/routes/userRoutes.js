@@ -7,6 +7,7 @@ import {
   updateUser,
   getUserProfile,
   getAllUsers,
+  getSuggestedUsers,
 } from "../controllers/userController.js";
 import protectRoute from "../middlewares/protectRoute.js";
 
@@ -15,6 +16,8 @@ const router = express.Router();
 router.get("/", protectRoute, getAllUsers);
 //get user profile
 router.get("/profile/:query", getUserProfile);
+//suggested users
+router.get("/suggested",protectRoute, getSuggestedUsers);
 //register user
 router.post("/signup", signupUser);
 //login user
