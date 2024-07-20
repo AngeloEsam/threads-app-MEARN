@@ -8,6 +8,7 @@ import {
   getUserProfile,
   getAllUsers,
   getSuggestedUsers,
+  freezeAccount
 } from "../controllers/userController.js";
 import protectRoute from "../middlewares/protectRoute.js";
 
@@ -28,5 +29,7 @@ router.post("/logout", logoutUser);
 router.post("/follow/:id", protectRoute, followAndUnfollowUser);
 //update user
 router.put("/update/:id", protectRoute, updateUser);
+//freeze account
+router.put("/freeze", protectRoute, freezeAccount);
 
 export default router;

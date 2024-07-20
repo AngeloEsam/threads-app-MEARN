@@ -17,6 +17,7 @@ const UserPage = () => {
   const [fetchingPosts, setFetchingPosts] = useState(true);
   useEffect(() => {
     const getPosts = async () => {
+      if(!user) return;
       setFetchingPosts(true);
       try {
         const res = await fetch(`/api/posts/user/${username}`);
@@ -35,7 +36,7 @@ const UserPage = () => {
       }
     };
     getPosts();
-  }, [username, showToast,setPosts]);
+  }, [username, showToast,setPosts,user]);
   if (!user && loading) {
     return (
       <Flex justifyContent={"center"}>
@@ -47,10 +48,6 @@ const UserPage = () => {
   return (
     <>
       <UserHeader user={user} />
-      {/* <UserPost likes={1200} replies={481} postImg='/post1.png' postTitle="Let's talk about threads."/>
-      <UserPost likes={451} replies={12} postImg='/post2.png' postTitle="Nice tutorial."/>
-      <UserPost likes={321} replies={989} postImg='/post3.png' postTitle="I love this guy."/>
-      <UserPost likes={212} replies={56}  postTitle="This is my first thread."/> */}
       {!fetchingPosts && posts.length === 0 && (
         <h1>No posts found for this user</h1>
       )}

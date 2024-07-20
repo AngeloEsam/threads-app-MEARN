@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema(
     //posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
     followers: [{ type: String,default:[] }],
     following: [{ type: String,default:[] }],
+    isFrozen:{
+      type: Boolean,
+      default: false
+    },
     bio:{
         type: String,
         default: ""
